@@ -10,40 +10,40 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
-import type { CreateBlogDto } from './dto/create-blog.dto';
-import type { UpdateBlogDto } from './dto/update-blog.dto';
-import type { Blog } from './blog.model';
+import { CreateBlogDto } from './dto/create-blog.dto';
+import { UpdateBlogDto } from './dto/update-blog.dto';
+import { Blog } from './blog.entity';
 
 @Controller('blog')
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
   @Get()
-  getAllPosts(): Blog[] {
+  async getAllPosts(): Promise<Blog[]> {
     return this.blogService.getAllPosts();
   }
 
   @Get(':id')
-  getPostById(@Param('id') id: string): Blog {
+  async getPostById(@Param('id') id: string): Promise<Blog> {
     return this.blogService.getPostById(id);
   }
 
   @Post()
-  createPost(@Body() createBlogDto: CreateBlogDto): Blog {
+  async createPost(@Body() createBlogDto: CreateBlogDto): Promise<Blog> {
     return this.blogService.createPost(createBlogDto);
   }
 
   @Patch(':id')
-  updatePost(
+  async updatePost(
     @Param('id') id: string,
     @Body() updateBlogDto: UpdateBlogDto,
-  ): Blog {
+  ): Promise<Blog> {
     return this.blogService.updatePost(id, updateBlogDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deletePost(@Param('id') id: string): void {
-    this.blogService.deletePost(id);
+  async deletePost(@Param('id') id: string): Promise<void> {
+    await this.blogService.deletePost(id);
   }
 }

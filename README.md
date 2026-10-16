@@ -1,115 +1,57 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🚀 NestJS Blog API (Learning Journey)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A robust, modular RESTful Blog API built from scratch using **NestJS**, **TypeScript**, **TypeORM**, and **SQLite**, featuring comprehensive **Unit (Jest)** and **End-to-End (Supertest)** testing suites.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This project was built as part of a hands-on learning roadmap to master enterprise backend architecture, dependency injection, database ORMs, and automated testing.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🏗️ Tech Stack
+* **Framework:** NestJS (Node.js framework)
+* **Language:** TypeScript
+* **Database & ORM:** SQLite via TypeORM
+* **Validation:** `class-validator` & `class-transformer`
+* **Testing:** Jest (Unit Tests) & Supertest (E2E Tests)
 
-## Project setup
+---
 
-```bash
-$ npm install
-```
+## 🔥 Engineering Hurdles & How I Solved Them
 
-## Compile and run the project
+Building real-world applications comes with roadblocks. Documenting these challenges and their solutions helped solidify core backend concepts:
 
-```bash
-# development
-$ npm run start
+1. **The Prisma Installation Hang:**
+   * *Problem:* The Prisma CLI hung indefinitely during setup due to network/cache stalls.
+   * *Solution:* Cut losses and pivoted to **TypeORM**, which has first-class integration in NestJS, utilizing a familiar repository pattern.
+2. **Missing SQLite Driver:**
+   * *Problem:* TypeORM threw a `DriverPackageNotInstalledError` on startup because it expects a specific underlying SQLite connector.
+   * *Solution:* Identified and installed the required `better-sqlite3` driver package (`npm install better-sqlite3`).
+3. **Async Type Mismatches in Controllers:**
+   * *Problem:* Shifting from synchronous in-memory arrays to asynchronous database queries threw TypeScript errors because the controller wasn't awaiting promises.
+   * *Solution:* Marked controller methods as `async` and updated return signatures to handle `Promise<Blog[]>`.
+4. **Jest Mocking for Database Repositories:**
+   * *Problem:* Integrating TypeORM broke existing unit tests because they weren't wired up to mock database operations.
+   * *Solution:* Properly mocked TypeORM's repository methods (`find`, `findOneBy`, `save`, `delete`) and isolated controller unit tests using service mocks to ensure lightning-fast, self-contained test runs.
 
-# watch mode
-$ npm run start:dev
+---
 
-# production mode
-$ npm run start:prod
-```
+## 🏆 Key Features
+* **Modular Architecture:** Clean separation of concerns using NestJS Modules, Controllers, and Services.
+* **Data Persistence:** Persistent storage using SQLite and TypeORM repositories instead of volatile in-memory arrays.
+* **Automatic DTO Validation:** Requests are intercepted and validated using `ValidationPipe`, stripping unauthorized properties.
+* **Robust Testing Suite:** 
+  * Unit tests isolating business logic with mocked dependencies.
+  * E2E tests simulating full HTTP request pipelines from route to database.
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ npm run test
+## ⚙️ Getting Started
 
-# e2e tests
-$ npm run test:e2e
+### Prerequisites
+* Node.js installed on your machine.
 
-# test coverage
-$ npm run test:cov
-```
+### Installation & Setup
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Observability
-
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
-"# nestjs-blogapp" 
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repository-url>
+   cd blogapp

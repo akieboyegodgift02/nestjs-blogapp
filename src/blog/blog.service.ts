@@ -1,57 +1,46 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Blog } from './blog.model';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Blog } from './blog.entity';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 
 @Injectable()
 export class BlogService {
-  private posts: Blog[] = [];
+  constructor(
+    @InjectRepository(Blog)
+    private blogRepository: Repository<Blog>,
+  ) {}
 
-  getAllPosts(): Blog[] {
-    return this.posts;
+  async getAllPosts(): Promise<Blog[]> {
+    return this.blogRepository.find();
   }
 
-  getPostById(id: string): Blog {
-    const found = this.posts.find((post) => post.id === id);
-    if (!found) {
+  async getPostById(id: string): Promise<Blog> {
+    const post = await this.blogRepository.findOneBy({ id });
+    if (!post) {
       throw new NotFoundException(`Blog with ID "${id}" not found`);
     }
-    return found;
-  }
-
-  createPost(createPostDto: CreateBlogDto): Blog {
-    const { title, content, author } = createPostDto;
-
-    const post: Blog = {
-      id: Date.now().toString(), // Simple unique ID for now
-      title,
-      content,
-      author,
-      createdAt: new Date(),
-    };
-
-    this.posts.push(post);
     return post;
   }
 
-  updatePost(id: string, updatePostDto: UpdateBlogDto): Blog {
-    const post = this.getPostById(id);
-
-    if (updatePostDto.title !== undefined) {
-      post.title = updatePostDto.title;
-    }
-    if (updatePostDto.content !== undefined) {
-      post.content = updatePostDto.content;
-    }
-    if (updatePostDto.author !== undefined) {
-      post.author = updatePostDto.author;
-    }
-
-    return post;
+  async createPost(createBlogDto: CreateBlogDto): Promise<Blog> {
+    const newPost = this.blogRepository.create(createBlogDto);
+    return this.blogRepository.save(newPost);
   }
 
-  deletePost(id: string): void {
-    const found = this.getPostById(id);
-    this.posts = this.posts.filter((post) => post.id !== found.id);
+  async updatePost(id: string, updateBlogDto: UpdateBlogDto): Promise<Blog> {
+    const post = await this.getPostById(id); // Ensures post exists
+    
+    // Merge updates and save
+    this.blogRepository.merge(post, updateBlogDto);
+    return this.blogRepository.save(post);
+  }
+
+  async deletePost(id: string): Promise<void> {
+    const result = await this.blogRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Blog with ID "${id}" not found`);
+    }
   }
 }

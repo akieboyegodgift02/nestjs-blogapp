@@ -1,16 +1,35 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BlogService } from './blog.service';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Blog } from './blog.entity';
 import { NotFoundException } from '@nestjs/common';
 
 describe('BlogService', () => {
   let service: BlogService;
 
+  // Create a mock repository object representing TypeORM's Repository
+  const mockBlogRepository = {
+    find: jest.fn(),
+    findOneBy: jest.fn(),
+    create: jest.fn().mockImplementation((dto) => dto),
+    save: jest.fn().mockImplementation((blog) => Promise.resolve({ id: '1', ...blog, createdAt: new Date() })),
+    delete: jest.fn(),
+    merge: jest.fn().mockImplementation((entity, dto) => Object.assign(entity, dto)),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [BlogService],
+      providers: [
+        BlogService,
+        {
+          provide: getRepositoryToken(Blog),
+          useValue: mockBlogRepository,
+        },
+      ],
     }).compile();
 
     service = module.get<BlogService>(BlogService);
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -18,72 +37,60 @@ describe('BlogService', () => {
   });
 
   describe('getAllPosts', () => {
-    it('should return an empty array by default', () => {
-      expect(service.getAllPosts()).toEqual([]);
-    });
-  });
+    it('should return an array of posts', async () => {
+      const mockPosts = [{ id: '1', title: 'Test Blog', content: 'Hello', author: 'Alice', createdAt: new Date() }];
+      mockBlogRepository.find.mockResolvedValue(mockPosts);
 
-  describe('createPost', () => {
-    it('should successfully create and return a blog post', () => {
-      const dto = {
-        title: 'NestJS Testing',
-        content: 'Learning how to write unit tests with Jest.',
-        author: 'Jane Doe',
-      };
-
-      const post = service.createPost(dto);
-
-      expect(post).toHaveProperty('id');
-      expect(post.title).toEqual(dto.title);
-      expect(post.content).toEqual(dto.content);
-      expect(post.author).toEqual(dto.author);
-      expect(service.getAllPosts().length).toEqual(1);
+      const result = await service.getAllPosts();
+      expect(result).toEqual(mockPosts);
+      expect(mockBlogRepository.find).toHaveBeenCalled();
     });
   });
 
   describe('getPostById', () => {
-    it('should return a blog post if a valid ID is provided', () => {
-      const dto = {
-        title: 'Find Me',
-        content: 'Testing getPostById functionality.',
-        author: 'John Doe',
-      };
+    it('should return a post by id', async () => {
+      const mockPost = { id: '1', title: 'Test Blog', content: 'Hello', author: 'Alice', createdAt: new Date() };
+      mockBlogRepository.findOneBy.mockResolvedValue(mockPost);
 
-      const created = service.createPost(dto);
-      const found = service.getPostById(created.id);
-
-      expect(found).toEqual(created);
+      const result = await service.getPostById('1');
+      expect(result).toEqual(mockPost);
+      expect(mockBlogRepository.findOneBy).toHaveBeenCalledWith({ id: '1' });
     });
 
-    it('should throw a NotFoundException if the post does not exist', () => {
-      expect(() => service.getPostById('non-existent-id')).toThrow(
-        NotFoundException,
-      );
+    it('should throw NotFoundException if post is not found', async () => {
+      mockBlogRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.getPostById('999')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('createPost', () => {
+    it('should successfully create and return a post', async () => {
+      const dto = { title: 'New Post', content: 'Content', author: 'Bob' };
+
+      const result = await service.createPost(dto);
+      expect(result).toHaveProperty('id');
+      expect(result.title).toEqual(dto.title);
+      expect(mockBlogRepository.save).toHaveBeenCalled();
     });
   });
 
   describe('deletePost', () => {
-    it('should successfully remove a blog post by ID', () => {
-      const dto = {
-        title: 'Delete Me',
-        content: 'Testing deletion.',
-        author: 'John Doe',
-      };
+    it('should delete a post if it exists', async () => {
+      const mockPost = { id: '1', title: 'Test', content: 'Content', author: 'Bob', createdAt: new Date() };
+      mockBlogRepository.findOneBy.mockResolvedValue(mockPost);
+      mockBlogRepository.delete.mockResolvedValue({ affected: 1 });
 
-      // 1. Create the post first so it actually exists in the array
-      const created = service.createPost(dto);
-
-      // 2. Delete using the dynamically generated ID
-      service.deletePost(created.id);
-
-      // 3. Verify the posts array is empty again
-      expect(service.getAllPosts()).toEqual([]);
+      await expect(service.deletePost('1')).resolves.not.toThrow();
+      expect(mockBlogRepository.delete).toHaveBeenCalledWith('1');
     });
 
-    it('should throw a NotFoundException if trying to delete a non-existent post', () => {
-      expect(() => service.deletePost('non-existent-id')).toThrow(
-        NotFoundException,
-      );
+  it('should throw NotFoundException if post to delete does not exist', async () => {
+        mockBlogRepository.delete.mockResolvedValue({ affected: 0 }); // Tell mock to simulate 0 rows deleted
+
+        await expect(service.deletePost('999')).rejects.toThrow(
+          NotFoundException,
+        );
+      });
     });
-  });
 });
