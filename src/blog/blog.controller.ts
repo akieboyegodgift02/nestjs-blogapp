@@ -8,19 +8,24 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  Query,
+  UseGuards
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+
 import { BlogService } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import { Blog } from './blog.entity';
+import { GetBlogQueryDto } from './dto/get-blog-query.dto';
 
 @Controller('blog')
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
   @Get()
-  async getAllPosts(): Promise<Blog[]> {
-    return this.blogService.getAllPosts();
+  async getAllPosts(@Query() queryDto: GetBlogQueryDto) {
+    return this.blogService.getAllPosts(queryDto);
   }
 
   @Get(':id')
@@ -28,11 +33,13 @@ export class BlogController {
     return this.blogService.getPostById(id);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post()
   async createPost(@Body() createBlogDto: CreateBlogDto): Promise<Blog> {
     return this.blogService.createPost(createBlogDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
   async updatePost(
     @Param('id') id: string,
@@ -41,6 +48,7 @@ export class BlogController {
     return this.blogService.updatePost(id, updateBlogDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(@Param('id') id: string): Promise<void> {

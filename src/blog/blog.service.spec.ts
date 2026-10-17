@@ -15,6 +15,7 @@ describe('BlogService', () => {
     save: jest.fn().mockImplementation((blog) => Promise.resolve({ id: '1', ...blog, createdAt: new Date() })),
     delete: jest.fn(),
     merge: jest.fn().mockImplementation((entity, dto) => Object.assign(entity, dto)),
+    createQueryBuilder: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -37,13 +38,34 @@ describe('BlogService', () => {
   });
 
   describe('getAllPosts', () => {
-    it('should return an array of posts', async () => {
-      const mockPosts = [{ id: '1', title: 'Test Blog', content: 'Hello', author: 'Alice', createdAt: new Date() }];
-      mockBlogRepository.find.mockResolvedValue(mockPosts);
+    it('should return paginated posts with metadata', async () => {
+      const mockPosts = [
+        { id: '1', title: 'Test Blog', content: 'Hello', author: 'Alice', createdAt: new Date() },
+      ];
 
-      const result = await service.getAllPosts();
-      expect(result).toEqual(mockPosts);
-      expect(mockBlogRepository.find).toHaveBeenCalled();
+      // Mock the QueryBuilder chain
+      const mockQueryBuilder = {
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([mockPosts, 1]),
+      };
+
+      jest.spyOn(mockBlogRepository, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as any);
+
+      const queryDto = { page: 1, limit: 5 };
+      const result = await service.getAllPosts(queryDto);
+
+      expect(result).toEqual({
+        data: mockPosts,
+        meta: {
+          totalItems: 1,
+          itemsPerPage: 5,
+          currentPage: 1,
+          totalPages: 1,
+        },
+      });
     });
   });
 

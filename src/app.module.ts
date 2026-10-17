@@ -4,6 +4,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { BlogModule } from './blog/blog.module';
+
+import { Blog } from './blog/blog.entity';
+import { User } from './users/user.entity';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
 @Module({
@@ -21,7 +27,15 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    TypeOrmModule.forRoot({
+      type: 'better-sqlite3',
+      database: 'db.sqlite',
+      entities: [Blog, User],
+      synchronize: true,
+    }),
     BlogModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

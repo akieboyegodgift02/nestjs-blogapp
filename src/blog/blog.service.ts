@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Blog } from './blog.entity';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
+import { GetBlogQueryDto } from './dto/get-blog-query.dto';
 
 @Injectable()
 export class BlogService {
@@ -12,8 +13,37 @@ export class BlogService {
     private blogRepository: Repository<Blog>,
   ) {}
 
-  async getAllPosts(): Promise<Blog[]> {
-    return this.blogRepository.find();
+  async getAllPosts(queryDto: GetBlogQueryDto) {
+    const { page = 1, limit = 5, search } = queryDto;
+    const skip = (page - 1) * limit;
+
+    const query = this.blogRepository.createQueryBuilder('blog');
+    
+    // If a search term is provided, filter by title or content
+    if (search) {
+      query.andWhere(
+        '(blog.title LIKE :search OR blog.content LIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    // Apply sorting (newest first) and pagination
+    query
+      .orderBy('blog.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    const [data, total] = await query.getManyAndCount();
+
+    return {
+      data,
+      meta: {
+        totalItems: total,
+        itemsPerPage: limit,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async getPostById(id: string): Promise<Blog> {
