@@ -55,3 +55,8 @@ Building real-world applications comes with roadblocks. Documenting these challe
    ```bash
    git clone <your-repository-url>
    cd blogapp
+
+## 🔐 Security & Authentication
+* **Password Hashing:** Passwords are securely hashed using `bcrypt` with salt rounds before storing them in SQLite.
+* **JWT Authentication:** Issuing JSON Web Tokens upon successful sign-in via `@nestjs/jwt`.
+* **Route Protection:** Public endpoints (`GET /blog`, `GET /blog/:id`) remain open, while sensitive operations (`POST`, `PATCH`, `DELETE`) are strictly guarded using `@UseGuards(AuthGuard('jwt'))`.
